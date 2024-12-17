@@ -1,0 +1,73 @@
+const User = require('../models/user')
+const bcrypt = require('bcryptjs')
+const { parse } = require('dotenv')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
+
+const expire = 1000 * 60 * 60 * 24
+async function signUp(req, res) {
+    try {
+
+        const { email, password } = req.body;
+
+        const hashedPassword = bcrypt.hashSync(password, 8)
+
+        const user = await User.create({ email, password: hashedPassword })
+
+        const token = jwt.sign({sub:User._id, expire}, process.env.SECRET)
+
+        res.status(201).json({ message: 'Registration Successful' , user , token})
+
+    }
+
+    catch (err) {
+
+        const errorMessage = err.message
+        const statusCode = err.code
+
+        console.error(err)
+
+        res.status(400).send({errorMessage, statusCode})
+    }
+}
+
+
+async function loginUser(req, res) {
+
+    const { email, password } = req.body
+
+    const user = await User.findOne({email})
+    if(!user) {
+        res.status(500).json({message:'You are not a user please register'})
+    } 
+    const comparePassword = await bcrypt.compareSync(password, user.password)
+    if(!comparePassword) {
+        res.status(401).json({message:'Incorrect password please try again'})
+    }
+
+
+
+    const token = jwt.sign({sub:user._id, expire}, process.env.SECRET)
+
+    res.cookie("Authorization", token, {
+        expires: new Date(expire),
+        httpOnly:true,
+        sameSite:'lax'
+
+    })
+    res.status(200).json({message:'Login Successful', user, token})
+
+
+}
+
+
+function checkAuth(req, res) {
+    console.log(req.user)
+    res.status(200).json({message:'Authentication complete'})
+}
+
+module.exports = {
+    signUp,
+    loginUser,
+    checkAuth
+}
