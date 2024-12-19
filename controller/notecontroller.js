@@ -4,8 +4,9 @@ const Note = require('../models/note')
 const User = require('../models/user')
 
 
+
 const getNote = (async (req, res, next) => {
-    const getnote = await Note.find()
+    const getnote = await Note.find().populate('user')
     const user = await User.findById()
     console.log(user)
    
@@ -25,13 +26,24 @@ const search = (async (req,res) => {
 
 const createNote = (async (req, res) => {
     const { title, content } = req.body
+
+    const userId = req.user.id
+
+    
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'User not authenticated.' });
+      }
+
     
     if(!title) {
         return res.status(400).json({message:'title cannot be left empty'})
     } else if(!content) {
         return res.status(400).json({message:'content cannot be left empty'})
     } else{
-    const note = new Note({title, content})
+    
+       
+        
+    const note = new Note({title, content, user:userId})
     const savedNote = await note.save() 
     res.status(201).send(savedNote)
     }
