@@ -28,6 +28,9 @@ const createNote = (async (req, res) => {
     const { title, content } = req.body
 
     const userId = req.user.id
+    const userEmail = req.user.email
+
+    console.log(userEmail)
 
     
     if (!req.user || !req.user.id) {
@@ -45,7 +48,7 @@ const createNote = (async (req, res) => {
         
     const note = new Note({title, content, user:userId})
     const savedNote = await note.save() 
-    res.status(201).send(savedNote)
+    res.status(201).json({message:'Note created Successfully', savedNote, email:userEmail })
     }
 })
 

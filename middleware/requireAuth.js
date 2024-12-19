@@ -12,7 +12,7 @@ async function requireAuth (req,res,next) {
     try {
       const decoded = jwt.verify(token.split(' ')[1], process.env.SECRET); // Extract Bearer token     
       req.user = decoded; // Attach the decoded user data (contains `id` and `email`)
-      console.log(req.user)
+   
 
       next();
     } catch (err) {
